@@ -162,6 +162,7 @@ func fetchResult(itemT reflect.Type, rows *sql.Rows, columns []string) (reflect.
 				values[i] = new(interface{})
 				continue
 			}
+			//log.Printf("%s: %v", fi.Path, values[i])
 
 			// TODO: refactor into a nice pattern
 			if _, ok := fi.Options["stringarray"]; ok {
