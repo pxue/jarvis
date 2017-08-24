@@ -1,9 +1,11 @@
 package mls
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 	"github.com/goware/lg"
 	"github.com/pxue/jarvis/lib/gmaps"
 	"github.com/pxue/jarvis/lib/mls/data"
+	"github.com/pxue/jarvis/lib/ws"
 )
 
 const (
@@ -23,29 +26,40 @@ const (
 	MLSHdr     = 8
 )
 
-const (
-	Work = "488 wellington st w, toronto, canada"
+var (
+	Work = os.Getenv("WORK_ADDRESS")
 )
 
-func ParseListings() error {
+func ParseListings(w http.ResponseWriter, r *http.Request) {
 	// maps client
 	maps, err := gmaps.New()
 	if err != nil {
-		return err
+		ws.Respond(w, 500, err)
+		return
 	}
 
 	DB, err := data.NewDBSession()
 	if err != nil {
-		return err
+		ws.Respond(w, 500, err)
+		return
 	}
 
-	res, err := http.Get("http://v3.torontomls.net/Live/Pages/Public/Link.aspx?Key=f051e20fd6e043c484edb8e1e6551a69&App=TREB")
+	q := r.URL.Query()
+	url := q.Get("url")
+	if len(url) == 0 {
+		ws.Respond(w, 400, errors.New("need url to crawl, pass in with `?url=x`"))
+		return
+	}
+
+	res, err := http.Get(url)
 	if err != nil {
-		return err
+		ws.Respond(w, 500, err)
+		return
 	}
 	doc, err := goquery.NewDocumentFromResponse(res)
 	if err != nil {
-		return err
+		ws.Respond(w, 500, err)
+		return
 	}
 
 	numListing := doc.Find(".data-list-row-number").Size()
@@ -126,10 +140,10 @@ func ParseListings() error {
 
 		// Beanfield Api
 		// TODO: postal code
-		l.HasBeanField, err = CheckBeanfield("")
-		if err != nil {
-			lg.Warn(err)
-		}
+		//l.HasBeanField, err = CheckBeanfield("")
+		//if err != nil {
+		//lg.Warn(err)
+		//}
 
 		// save to db
 		if err := DB.Save(l); err != nil {
@@ -138,7 +152,7 @@ func ParseListings() error {
 		lg.Debugf("saved %s", MLS)
 	})
 
-	return nil
+	ws.Respond(w, 200, "success")
 }
 
 func getDetail(link string) (*goquery.Document, error) {

@@ -3,6 +3,7 @@ package web
 import (
 	"github.com/pressly/chi"
 	"github.com/pxue/jarvis/lib/linkedin"
+	"github.com/pxue/jarvis/lib/mls"
 	"github.com/pxue/jarvis/web/slack"
 )
 
@@ -21,6 +22,10 @@ func New(h *Handler) chi.Router {
 		r.Get("/oauth/callback", linkedin.OAuthCallback)
 
 		//r.Get("/connected", linkedin.GetConnected)
+	})
+
+	r.Route("/mls", func(r chi.Router) {
+		r.Get("/crawl", mls.ParseListings)
 	})
 
 	return r
