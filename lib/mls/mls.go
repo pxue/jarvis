@@ -14,7 +14,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/goware/lg"
 	"github.com/pxue/jarvis/lib/gmaps"
-	"github.com/pxue/jarvis/lib/mls/data"
+	data "github.com/pxue/jarvis/lib/mls/mlsdata"
 	"github.com/pxue/jarvis/lib/ws"
 )
 
@@ -31,14 +31,11 @@ var (
 )
 
 func ParseListings(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	DB := ctx.Value("database").(*data.Database)
+
 	// maps client
 	maps, err := gmaps.New()
-	if err != nil {
-		ws.Respond(w, 500, err)
-		return
-	}
-
-	DB, err := data.NewDBSession()
 	if err != nil {
 		ws.Respond(w, 500, err)
 		return
