@@ -22,7 +22,7 @@ func main() {
 	})
 
 	router := web.New(&web.Handler{})
-	hostURL := fmt.Sprintf(":%s", os.Getenv("APP_PORT"))
+	hostURL := fmt.Sprintf(":%s", os.Getenv("PORT"))
 	if err := lg.SetLevelString("debug"); err != nil {
 		lg.Fatal(err)
 	}
